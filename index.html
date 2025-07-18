@@ -145,6 +145,20 @@ header em {
     font-weight: 400;
 }
 
+/* Container for logo and text: stacks items vertically and centers them */
+.logo-container {
+    display:flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Size and spacing for the logo image */
+.logo-container img {
+    width: 120px;
+    height: auto;
+    margin-bottom: 0.5rem;
+}
+
 /* Center the text within the header container */
 header > div {
     text-align: center;
@@ -241,9 +255,8 @@ video {
 </head>
 <body>
 <header>
-  <!-- Adjust logo size for better visibility of text and icon -->
-  <img src="logo.png" alt="Riggs TV logo" style="width:100px;height:auto;margin-right:1rem;">
-  <div>
+  <div class="logo-container">
+    <img src="logo.png" alt="Riggs TV logo">
     <h1>Riggs TV</h1>
     <p><em>Be everywhere at once.</em></p>
   </div>
