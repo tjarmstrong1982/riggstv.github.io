@@ -8,16 +8,24 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
 /* Riggs TV styles */
+  :root {
+    --bg-color: #f8f9fa;
+    --primary: #0066cc;
+    --secondary: #00aaff;
+    --card-bg: #ffffff;
+    --text-color: #222;
+    --shadow: rgba(0,0,0,0.1);
+  }
 body {
     font-family: Arial, sans-serif;
     margin:0;
     padding:0;
-    background:#f8f9fa;
-    color:#222;
+    background: var(--bg-color);
+    color: var(--text-color);
 }
 header {
     /* Modern gradient header and flex layout */
-    background: linear-gradient(90deg, #0066cc, #00aaff);
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
     color:#fff;
     padding:1rem;
     display:flex;
@@ -35,23 +43,44 @@ header h1 {
 #map {
     width:100%;
     height:500px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px var(--shadow);
+    overflow:hidden;
+    margin-bottom: 1rem;
 }
 #channels-container {
     padding:1rem;
 }
 .channel-list {
-    max-height: 400px;
-    overflow-y: auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1rem;
     list-style: none;
     padding:0;
+    margin:0;
 }
 .channel-list li {
-    margin:0.3rem 0;
-    cursor:pointer;
-    color:#007BFF;
+    background: var(--card-bg);
+    border-radius: 8px;
+    padding: 0.75rem;
+    box-shadow: 0 2px 4px var(--shadow);
+    cursor: pointer;
+    color: var(--primary);
+    transition: transform 0.2s, box-shadow 0.2s;
 }
 .channel-list li:hover {
-    text-decoration:underline;
+    transform: translateY(-4px);
+    box-shadow: 0 4px 8px var(--shadow);
+    text-decoration:none;
+}
+.channel-list-wrapper {
+    background: var(--card-bg);
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 2px 8px var(--shadow);
+    max-height: 400px;
+    overflow-y: auto;
+    margin-top: 0.5rem;
 }
 .video-container {
     width:100%;
@@ -96,7 +125,9 @@ video {
     <select id="category-select" class="category-filter">
         <option value="all">All</option>
     </select>
-    <ul id="channel-list" class="channel-list"></ul>
+    <div class="channel-list-wrapper">
+      <ul id="channel-list" class="channel-list"></ul>
+    </div>
     <div id="video-panel" class="video-container"></div>
     <p id="stream-note" style="font-size:0.9rem; color:#555;"></p>
 </div>
