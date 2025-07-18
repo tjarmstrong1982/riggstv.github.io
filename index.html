@@ -1853,23 +1853,6 @@ const countryCoords = {
   "IE": [53.4129, -8.2439]
 };
 
-/**
- * Compute pseudo-random coordinates for US channels based on channel name.
- * This spreads points across the continental U.S. rather than clustering at a single point.
- * The latitude range is approximately 24°N–49°N and longitude range -125°W to -67°W.
- * This function is deterministic given the channel name and does not require any external lookup.
- * @param {string} name Channel name
- * @returns {number[]} [latitude, longitude]
- */
-function getCoordsForChannel(name) {
-    let hash = 0;
-    for (let i = 0; i < name.length; i++) {
-        hash += name.charCodeAt(i);
-    }
-    const lat = 24 + (hash % 2500) / 100; // 24 to 49
-    const lon = -125 + (hash % 5800) / 100; // -125 to -67
-    return [lat, lon];
-}
 
 // Initialise the map
 const map = L.map('map').setView([20, 0], 2);
@@ -1885,36 +1868,6 @@ for (const [code, coords] of Object.entries(countryCoords)) {
   marker.on('click', () => showChannels(code));
 }
 
-// Add individual markers for U.S. channels to show approximate locations
-// We use circle markers with small radius for readability. Clicking a marker brings up the U.S. channel list
-if (channelData.US) {
-  channelData.US.forEach(ch => {
-    const coords = getCoordsForChannel(ch.name);
-    const marker = L.circleMarker(coords, {
-      radius: 3,
-      color: '#0066cc',
-      fillColor: '#0066cc',
-      fillOpacity: 0.7
-    }).addTo(map);
-    marker.bindTooltip(ch.name, {permanent: false});
-    marker.on('click', () => {
-      showChannels('US');
-      // After rendering the list, scroll to and highlight this channel
-      setTimeout(() => {
-        const items = document.querySelectorAll('#channel-list li');
-        items.forEach(li => {
-          if (li.textContent.startsWith(ch.name)) {
-            li.scrollIntoView({behavior: 'smooth', block: 'center'});
-            li.style.backgroundColor = 'rgba(0, 102, 204, 0.1)';
-            setTimeout(() => {
-              li.style.backgroundColor = '';
-            }, 2000);
-          }
-        });
-      }, 150);
-    });
-  });
-}
 
 // Display channel list for a selected country
 function showChannels(countryCode) {
