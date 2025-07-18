@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <title>Riggs TV</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Import modern Google font for improved typography -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <!-- Load Leaflet styles from CDN without SRI attributes to avoid blocking the map on some browsers -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
@@ -15,6 +17,11 @@
     --card-bg: #ffffff;
     --text-color: #222;
     --shadow: rgba(0,0,0,0.1);
+    /* Input field colors */
+    --input-bg: #ffffff;
+    --input-border: #cccccc;
+    --input-bg-dark: #2d2d2d;
+    --input-border-dark: #444444;
     /* Dark mode variables */
     --bg-color-dark: #1a1a1a;
     --primary-dark: #0a84ff;
@@ -22,6 +29,9 @@
     --card-bg-dark: #2a2a2a;
     --text-color-dark: #f5f5f5;
     --shadow-dark: rgba(0,0,0,0.5);
+    /* Override input colors in dark mode */
+    --input-bg: var(--input-bg);
+    --input-border: var(--input-border);
   }
 
 /* Dark mode override using body class */
@@ -32,9 +42,12 @@ body.dark-mode {
     --card-bg: var(--card-bg-dark);
     --text-color: var(--text-color-dark);
     --shadow: var(--shadow-dark);
+    /* Use dark input colors */
+    --input-bg: var(--input-bg-dark);
+    --input-border: var(--input-border-dark);
 }
 body {
-    font-family: Arial, sans-serif;
+    font-family: 'Inter', sans-serif;
     margin:0;
     padding:0;
     background: var(--bg-color);
@@ -115,10 +128,13 @@ video {
 /* Search input appearance */
 .search-input {
     padding: 0.25rem 0.5rem;
-    border: 1px solid #ccc;
+    border: 1px solid var(--input-border);
     border-radius: 4px;
     flex: 1;
     min-width: 200px;
+    background: var(--input-bg);
+    color: var(--text-color);
+    outline: none;
 }
 
 /* Theme toggle button styling */
@@ -169,7 +185,7 @@ video {
           <option value="all">All</option>
       </select>
       <label for="search-input">Search:</label>
-      <input type="text" id="search-input" class="search-input" placeholder="Search channels..." style="flex:1; min-width:200px; padding:0.25rem; border:1px solid #ccc; border-radius:4px;">
+      <input type="text" id="search-input" class="search-input" placeholder="Search channels...">
     </div>
     <div class="channel-list-wrapper">
       <ul id="channel-list" class="channel-list"></ul>
