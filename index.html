@@ -46,6 +46,52 @@ body.dark-mode {
     --input-bg: var(--input-bg-dark);
     --input-border: var(--input-border-dark);
 }
+
+/* Layout wrapper to align map and channel list */
+.content {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: flex-start;
+}
+#map {
+    flex: 2;
+    min-width: 300px;
+}
+#channels-container {
+    flex: 1;
+    min-width: 280px;
+    max-width: 450px;
+}
+
+/* Dynamic sponsor banner with shimmering effect */
+.ad-banner {
+    background: linear-gradient(90deg, #ffeaa7, #fab1a0);
+    color: #333;
+    font-size: 0.95rem;
+    text-align: center;
+    padding: 0.75rem;
+    margin: 1rem 0;
+    border-radius: 8px;
+    font-weight: 600;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 2px 6px var(--shadow);
+}
+.ad-banner::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 200%;
+    height: 100%;
+    background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 100%);
+    animation: shimmer 4s infinite;
+}
+@keyframes shimmer {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(50%); }
+}
 body {
     font-family: 'Inter', sans-serif;
     margin:0;
@@ -179,15 +225,6 @@ video {
     opacity: 0.8;
 }
 
-.ad-banner {
-    background-color: #fffbe6;
-    color: #6c757d;
-    font-size: 0.9rem;
-    text-align: center;
-    padding: 0.5rem;
-    margin: 0.5rem 0;
-    border: 1px solid #e2e2e2;
-}
 @media (max-width:768px) {
     #map { height:300px; }
 }
@@ -195,7 +232,8 @@ video {
 </head>
 <body>
 <header>
-  <img src="logo.png" alt="Riggs TV logo" style="width:80px;height:80px;margin-right:1rem;">
+  <!-- Adjust logo size for better visibility of text and icon -->
+  <img src="logo.png" alt="Riggs TV logo" style="width:100px;height:auto;margin-right:1rem;">
   <div>
     <h1>Riggs TV</h1>
     <p><em>Be everywhere at once.</em></p>
@@ -204,6 +242,8 @@ video {
   <button id="theme-toggle" aria-label="Toggle dark mode">🌙</button>
 </header>
 <div class="ad-banner">Sponsored by Picker's Choice, Arab, Alabama</div>
+<!-- Content wrapper organizes the map and channel panel side-by-side on larger screens -->
+<main class="content">
 <div id="map"></div>
 <div id="channels-container" style="display:none;">
     <h2 id="country-title">Channels</h2>
@@ -220,7 +260,8 @@ video {
     </div>
     <div id="video-panel" class="video-container"></div>
     <p id="stream-note" style="font-size:0.9rem; color:#555;"></p>
-</div>
+</div><!-- end channels-container -->
+</main><!-- end content wrapper -->
 <footer style="margin-top:2rem; padding:1rem; background:#f1f1f1; text-align:center;">
 <p>Disclaimer: For educational use only. Streams from public broadcasters; may vary. Faith first – stream with integrity.</p>
 </footer>
@@ -1812,6 +1853,24 @@ const countryCoords = {
   "IE": [53.4129, -8.2439]
 };
 
+/**
+ * Compute pseudo-random coordinates for US channels based on channel name.
+ * This spreads points across the continental U.S. rather than clustering at a single point.
+ * The latitude range is approximately 24°N–49°N and longitude range -125°W to -67°W.
+ * This function is deterministic given the channel name and does not require any external lookup.
+ * @param {string} name Channel name
+ * @returns {number[]} [latitude, longitude]
+ */
+function getCoordsForChannel(name) {
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+        hash += name.charCodeAt(i);
+    }
+    const lat = 24 + (hash % 2500) / 100; // 24 to 49
+    const lon = -125 + (hash % 5800) / 100; // -125 to -67
+    return [lat, lon];
+}
+
 // Initialise the map
 const map = L.map('map').setView([20, 0], 2);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -1824,6 +1883,37 @@ for (const [code, coords] of Object.entries(countryCoords)) {
   const marker = L.marker(coords).addTo(map);
   marker.bindPopup(code);
   marker.on('click', () => showChannels(code));
+}
+
+// Add individual markers for U.S. channels to show approximate locations
+// We use circle markers with small radius for readability. Clicking a marker brings up the U.S. channel list
+if (channelData.US) {
+  channelData.US.forEach(ch => {
+    const coords = getCoordsForChannel(ch.name);
+    const marker = L.circleMarker(coords, {
+      radius: 3,
+      color: '#0066cc',
+      fillColor: '#0066cc',
+      fillOpacity: 0.7
+    }).addTo(map);
+    marker.bindTooltip(ch.name, {permanent: false});
+    marker.on('click', () => {
+      showChannels('US');
+      // After rendering the list, scroll to and highlight this channel
+      setTimeout(() => {
+        const items = document.querySelectorAll('#channel-list li');
+        items.forEach(li => {
+          if (li.textContent.startsWith(ch.name)) {
+            li.scrollIntoView({behavior: 'smooth', block: 'center'});
+            li.style.backgroundColor = 'rgba(0, 102, 204, 0.1)';
+            setTimeout(() => {
+              li.style.backgroundColor = '';
+            }, 2000);
+          }
+        });
+      }, 150);
+    });
+  });
 }
 
 // Display channel list for a selected country
