@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <title>Riggs TV: Global Streams on the Map – Named after my boy Riggs!</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-o9N1j5bthro0aYFp7BdF8lHBW0gEtn7RXGdO9PsCTLc=" crossorigin=""/>
+<!-- Load Leaflet styles from CDN without SRI attributes to avoid blocking the map on some browsers -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
 /* Riggs TV styles */
 body {
@@ -89,7 +90,8 @@ video {
 <footer style="margin-top:2rem; padding:1rem; background:#f1f1f1; text-align:center;">
 <p>Disclaimer: For educational use only. Streams from public broadcasters; may vary. Faith first – stream with integrity.</p>
 </footer>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-o9R6pMB8H6b7X4TP3mvlUXQ9gg8+EI4PB1LhYtrnFAw=" crossorigin=""></script>
+<!-- Load Leaflet script from CDN without SRI attributes to avoid blocking the map on some browsers -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 // Channel data organised by ISO country code
 const channelData = {
