@@ -15,7 +15,24 @@
     --card-bg: #ffffff;
     --text-color: #222;
     --shadow: rgba(0,0,0,0.1);
+    /* Dark mode variables */
+    --bg-color-dark: #1a1a1a;
+    --primary-dark: #0a84ff;
+    --secondary-dark: #4a90e2;
+    --card-bg-dark: #2a2a2a;
+    --text-color-dark: #f5f5f5;
+    --shadow-dark: rgba(0,0,0,0.5);
   }
+
+/* Dark mode override using body class */
+body.dark-mode {
+    --bg-color: var(--bg-color-dark);
+    --primary: var(--primary-dark);
+    --secondary: var(--secondary-dark);
+    --card-bg: var(--card-bg-dark);
+    --text-color: var(--text-color-dark);
+    --shadow: var(--shadow-dark);
+}
 body {
     font-family: Arial, sans-serif;
     margin:0;
@@ -30,7 +47,7 @@ header {
     padding:1rem;
     display:flex;
     align-items:center;
-    justify-content:center;
+    justify-content:flex-start;
     gap:0.5rem;
     text-align:left;
 }
@@ -95,6 +112,15 @@ video {
     margin:0.5rem 0;
 }
 
+/* Search input appearance */
+.search-input {
+    padding: 0.25rem 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    flex: 1;
+    min-width: 200px;
+}
+
 .ad-banner {
     background-color: #fffbe6;
     color: #6c757d;
@@ -116,15 +142,21 @@ video {
     <h1>Riggs TV</h1>
     <p><em>Be everywhere at once.</em></p>
   </div>
+  <!-- Theme toggle button (sun/moon icon) -->
+  <button id="theme-toggle" aria-label="Toggle dark mode" style="margin-left:auto; background:transparent; border:none; color:inherit; cursor:pointer; font-size:1.5rem; line-height:1;">🌙</button>
 </header>
 <div class="ad-banner">Sponsored by Picker's Choice, Arab, Alabama</div>
 <div id="map"></div>
 <div id="channels-container" style="display:none;">
     <h2 id="country-title">Channels</h2>
-    <label for="category-select">Filter by category:</label>
-    <select id="category-select" class="category-filter">
-        <option value="all">All</option>
-    </select>
+    <div style="display:flex; flex-wrap:wrap; gap:0.5rem; align-items:center; margin-bottom:0.5rem;">
+      <label for="category-select">Category:</label>
+      <select id="category-select" class="category-filter">
+          <option value="all">All</option>
+      </select>
+      <label for="search-input">Search:</label>
+      <input type="text" id="search-input" class="search-input" placeholder="Search channels..." style="flex:1; min-width:200px; padding:0.25rem; border:1px solid #ccc; border-radius:4px;">
+    </div>
     <div class="channel-list-wrapper">
       <ul id="channel-list" class="channel-list"></ul>
     </div>
@@ -1740,6 +1772,7 @@ for (const [code, coords] of Object.entries(countryCoords)) {
 function showChannels(countryCode) {
   const listEl = document.getElementById('channel-list');
   const selectEl = document.getElementById('category-select');
+  const searchEl = document.getElementById('search-input');
   const container = document.getElementById('channels-container');
   const videoPanel = document.getElementById('video-panel');
   const streamNote = document.getElementById('stream-note');
@@ -1758,24 +1791,34 @@ function showChannels(countryCode) {
     selectEl.appendChild(opt);
   });
 
-  // Render list for selected filter
-  renderList(countryCode, 'all');
+  // Render list for selected filter and search term
+  renderList(countryCode, 'all', '');
 
-  // When filter changes, update list
+  // When category changes or search input changes, update list
   selectEl.onchange = function() {
-    renderList(countryCode, this.value);
+    renderList(countryCode, this.value, searchEl.value.trim().toLowerCase());
+  };
+  searchEl.oninput = function() {
+    renderList(countryCode, selectEl.value, this.value.trim().toLowerCase());
   };
 
-  function renderList(code, filter) {
+  function renderList(code, filter, search) {
     listEl.innerHTML = '';
     channelData[code]
-      .filter(ch => filter === 'all' || ch.category === filter)
+      .filter(ch => (filter === 'all' || ch.category === filter) && ch.name.toLowerCase().includes(search))
       .forEach(ch => {
         const li = document.createElement('li');
         li.textContent = `${ch.name} (${ch.category})`;
         li.onclick = () => playStream(ch);
         listEl.appendChild(li);
       });
+    // If no channels match, display a message
+    if (!listEl.hasChildNodes()) {
+      const li = document.createElement('li');
+      li.textContent = 'No channels found.';
+      li.style.color = '#666';
+      listEl.appendChild(li);
+    }
   }
 
   function playStream(channel) {
@@ -1791,6 +1834,15 @@ function showChannels(countryCode) {
     streamNote.textContent = 'Some streams may require VPN for access.';
   }
 }
+
+// Theme toggle functionality
+const themeToggleBtn = document.getElementById('theme-toggle');
+themeToggleBtn.addEventListener('click', () => {
+  const body = document.body;
+  body.classList.toggle('dark-mode');
+  // Update icon: show sun in dark mode to indicate switching back to light
+  themeToggleBtn.textContent = body.classList.contains('dark-mode') ? '☀️' : '🌙';
+});
 </script>
 </body>
 </html>
