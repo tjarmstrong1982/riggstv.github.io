@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Riggs TV: Global Streams on the Map – Named after my boy Riggs!</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-o9N1j5bthro0aYFp7BdF8lHBW0gEtn7RXGdO9PsCTLc=" crossorigin=""/>
+<style>
+/* Riggs TV styles */
+body {
+    font-family: Arial, sans-serif;
+    margin:0;
+    padding:0;
+    background:#f8f9fa;
+    color:#222;
+}
+header {
+    /* Modern gradient header and flex layout */
+    background: linear-gradient(90deg, #0066cc, #00aaff);
+    color:#fff;
+    padding:1rem;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:0.5rem;
+    text-align:left;
+}
+
+header h1 {
+    margin:0;
+    font-size:1.6rem;
+    line-height:1.2;
+}
+#map {
+    width:100%;
+    height:500px;
+}
+#channels-container {
+    padding:1rem;
+}
+.channel-list {
+    list-style: none;
+    padding:0;
+}
+.channel-list li {
+    margin:0.3rem 0;
+    cursor:pointer;
+    color:#007BFF;
+}
+.channel-list li:hover {
+    text-decoration:underline;
+}
+.video-container {
+    width:100%;
+    max-width:800px;
+    margin-top:1rem;
+}
+video {
+    width:100%;
+    max-height:400px;
+}
+.category-filter {
+    margin:0.5rem 0;
+}
+@media (max-width:768px) {
+    #map { height:300px; }
+}
+</style>
+</head>
+<body>
+<header>
+  <img src="logo.png" alt="Riggs TV logo" style="width:80px;height:80px;margin-right:1rem;">
+  <div>
+    <h1>Riggs TV: Global Streams on the Map – Named after my boy Riggs!</h1>
+    <p>Click a country on the map for live streams – public sources for resilience and fun.</p>
+  </div>
+</header>
+<div id="map"></div>
+<div id="channels-container" style="display:none;">
+    <h2 id="country-title">Channels</h2>
+    <label for="category-select">Filter by category:</label>
+    <select id="category-select" class="category-filter">
+        <option value="all">All</option>
+    </select>
+    <ul id="channel-list" class="channel-list"></ul>
+    <div id="video-panel" class="video-container"></div>
+    <p id="stream-note" style="font-size:0.9rem; color:#555;"></p>
+</div>
+<footer style="margin-top:2rem; padding:1rem; background:#f1f1f1; text-align:center;">
+<p>Disclaimer: For educational use only. Streams from public broadcasters; may vary. Faith first – stream with integrity.</p>
+</footer>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-o9R6pMB8H6b7X4TP3mvlUXQ9gg8+EI4PB1LhYtrnFAw=" crossorigin=""></script>
+<script>
+// Channel data organised by ISO country code
+const channelData = {
+  "US": [
+    {name:"ABC News Live", url:"https://content.uplynk.com/channel/3324f2467c414329b3b0cc5cd987b6be.m3u8", category:"News"},
+    {name:"CBS News 24/7", url:"https://cbsn-us.cbsnstream.cbsnews.com/out/v1/55a8648e8f134e82a470f83d562deeca/master.m3u8", category:"News"},
+    {name:"NBC News Now", url:"https://livetv-fa.tubi.video/nbc-news-now/master.m3u8", category:"News"},
+    {name:"CNN International", url:"https://cnn-cnninternational-1-eu.rakuten.wurl.tv/playlist.m3u8", category:"News"},
+    {name:"Bloomberg TV US", url:"https://bloomberg.com/media-manifest/streams/us.m3u8", category:"Business"},
+    {name:"Cheddar", url:"https://live.chdrstatic.com/cheddar/index.m3u8", category:"Business"},
+    {name:"Cheddar Big News", url:"https://live.chdrstatic.com/cbn/index.m3u8", category:"Business"},
+    {name:"Free Speech TV", url:"https://edge.free-speech-tv-live.top.comcast.net/out/u/fstv.m3u8", category:"News"},
+    {name:"CBN News", url:"https://bcliveunivsecure-lh.akamaihd.net/i/news_1@500579/master.m3u8", category:"News"},
+    {name:"VOA English", url:"https://voa-lh.akamaihd.net/i/voa_mpls_tvmc6@320298/master.m3u8", category:"News"},
+  ],
+  "UK": [
+    {name:"BBC News", url:"https://vs-hls-push-ww-live.akamaized.net/out/v1/d9a33f1013ce439892c8c12db8a05aed/mobile_wifi_main_hd_abr_v2.m3u8", category:"News"},
+    {name:"BBC World News", url:"http://z5ams.akamaized.net/bbcworldnews/tracks-v1a1/index.m3u8", category:"News"},
+    {name:"Sky News", url:"http://skydvn-nowtv-atv-prod.skydvn.com/atv/skynews/1404/live/index.m3u8", category:"News"},
+    {name:"Bloomberg TV UK", url:"http://cdn-videos.akamaized.net/btv/desktop/akamai/europe/live/primary.m3u8", category:"Business"},
+    {name:"Arise News", url:"http://contributionstreams.ashttp9.visionip.tv/live/visiontv-contributionstreams-arise-tv-hsslive-25f-16x9-SD/chunklist.m3u8", category:"News"},
+    {name:"Akaal Channel", url:"https://cdn-globecast.akamaized.net/live/eds/akaal_tv/hls1_smart_akaal/akaal_tv.m3u8", category:"Religious"},
+    {name:"RT UK", url:"https://rt-uk.secure.footprint.net/1106.m3u8", category:"News"},
+    {name:"Sky News Extra 1", url:"https://skynewsau-live.akamaized.net/hls/live/2002689/skynewsau-extra1/master.m3u8", category:"News"},
+    {name:"Sky News Extra 2", url:"https://skynewsau-live.akamaized.net/hls/live/2002690/skynewsau-extra2/master.m3u8", category:"News"},
+    {name:"Sky News Extra 3", url:"https://skynewsau-live.akamaized.net/hls/live/2002691/skynewsau-extra3/master.m3u8", category:"News"},
+  ],
+  "CA": [
+    {name:"Assemblée Nationale du Québec", url:"http://diffusionm4.assnat.qc.ca/canal9/250.sdp/playlist.m3u8", category:"Government"},
+    {name:"CBC News", url:"http://cbcnewshd-f.akamaihd.net/i/cbcnews_1@8981/index_2500_av-p.m3u8", category:"News"},
+    {name:"CHCH", url:"https://bcovlive-a.akamaihd.net/8919eed04a6e4279be1f434a4063df6a/us-west-2/5644964886001/playlist.m3u8", category:"News"},
+    {name:"CPAC (English)", url:"http://bcoveliveios-i.akamaihd.net/hls/live/248519/1242843915001_1/master.m3u8", category:"Government"},
+    {name:"CPAC (French)", url:"http://bcoveliveios-i.akamaihd.net/hls/live/248520/1242843915001_2/master.m3u8", category:"Government"},
+    {name:"FEVA TV", url:"https://vcnfevatv.teleosmedia.com/stream/fevatv/fevatv/seglist_720p.m3u8", category:"Entertainment"},
+    {name:"Space", url:"http://pe-ak-lp01a-9c9media.akamaized.net/live/Space/p/hls/00000201/689924a518f2c776/index/2176f3ac/live/stream/h264/v1/3500000/manifest.m3u8", category:"Entertainment"},
+    {name:"Tele-Québec", url:"https://teleqmmd.mmdlive.lldns.net/teleqmmd/f386e3b206814e1f8c8c1c71c0f8e748/chunklist_b2592000.m3u8", category:"Entertainment"},
+    {name:"NTV Newfoundland", url:"http://1-fss-fso35.streamhoster.com/lv_ntv/_definst_/broadcast1/chunklist.m3u8", category:"News"},
+    {name:"World Fishing Network", url:"http://161.0.157.8/PLTV/88888888/224/3221226811/index.m3u8", category:"Sports"},
+  ],
+  "AU": [
+    {name:"ABC News Channel", url:"https://abc-iview-mediapackagestreams-1.akamaized.net/out/v1/50345bf35f664739912f0b255c172ae9/index.m3u8", category:"News"},
+    {name:"ausbiz TV", url:"https://d1vue6azj6ksrp.cloudfront.net/v1/hls/live/2015520/ausbiz/index.m3u8", category:"Business"},
+    {name:"C31 Melbourne", url:"https://c31in-hls-live.akamaized.net/hls/live/2003454/c31in/c31in.m3u8", category:"Community"},
+    {name:"Channel 44 (Adelaide)", url:"https://c44adelaide-lh.akamaihd.net/i/C44Adelaide_1@490329/master.m3u8", category:"Community"},
+    {name:"CTV Perth", url:"https://ctv-perth-hls-live.akamaized.net/hls/live/2004878/ctv-perth/master.m3u8", category:"Community"},
+    {name:"CTV Perth Movies", url:"https://ctv-perth-movies-hls-live.akamaized.net/hls/live/2004899/ctv-perth-movies/master.m3u8", category:"Entertainment"},
+    {name:"CTV Perth News", url:"https://ctv-perth-news-hls-live.akamaized.net/hls/live/2004898/ctv-perth-news/master.m3u8", category:"News"},
+    {name:"Expo Channel", url:"https://expo-channel-live.akamaized.net/hls/live/2001325/Expo-Channel/master.m3u8", category:"Shopping"},
+    {name:"Racing.com", url:"https://racing-rdotca-stream.akamaized.net/hls/live/2004476/racing/racing.m3u8", category:"Sports"},
+    {name:"TVSN", url:"https://tvsn-live.akamaized.net/hls/live/2005630/TVSN/master.m3u8", category:"Shopping"},
+  ],
+  "NZ": [
+    {name:"Action Hollywood Movies", url:"https://movies247-streams-public.s3-ap-southeast-2.amazonaws.com/ActionHollywoodMovies/index.m3u8", category:"Movies"},
+    {name:"CineView", url:"https://cinemax-vodd-live.akamaized.net/hls/live/2003249/cineview/cineview.m3u8", category:"Movies"},
+    {name:"Firstlight TV", url:"https://stream.firstlight.org.nz/hls/firstlight.m3u8", category:"Faith"},
+    {name:"Juice TV", url:"https://juicetv-streams-global.akamaized.net/hls/live/2005689/juiceTV/playlist.m3u8", category:"Music"},
+    {name:"Kordia TV", url:"https://kordiatv-hls.mediaaustralia.com.au/live/kordia/master.m3u8", category:"Community"},
+    {name:"Love Stories TV", url:"https://lovestoriestv-live.s3.us-west-2.amazonaws.com/hls/live.m3u8", category:"Movies"},
+    {name:"Parliament TV", url:"https://cspanone-skyusper.cloudfront.net/hls/live/2003457/parliamenttv/master.m3u8", category:"Government"},
+    {name:"Pulse TV", url:"https://pulsetv-streaming.akamaized.net/hls/live/2004878/pulsetv/master.m3u8", category:"Music"},
+    {name:"Wairarapa TV", url:"https://wairarapatelevision.streamtv.com/hls/wairarapatv.m3u8", category:"Community"},
+    {name:"Rush (YouTube)", url:"https://www.youtube.com/watch?v=dQw4w9WgXcQ", category:"Entertainment"},
+  ],
+  "IE": [
+    {name:"Cúla4", url:"https://d1okxcqhp1gno9.cloudfront.net/ccts/ccts-v3.m3u8", category:"Kids"},
+    {name:"Oireachtas TV", url:"https://livecdn.cdnng.com/hls/oireachtas_480p/index.m3u8", category:"Government"},
+    {name:"Committee Room 1", url:"https://livecdn.cdnng.com/hls/orie_cmmt1_480p/index.m3u8", category:"Government"},
+    {name:"Committee Room 2", url:"https://livecdn.cdnng.com/hls/orie_cmmt2_480p/index.m3u8", category:"Government"},
+    {name:"Committee Room 3", url:"https://livecdn.cdnng.com/hls/orie_cmmt3_480p/index.m3u8", category:"Government"},
+    {name:"Committee Room 4", url:"https://livecdn.cdnng.com/hls/orie_cmmt4_480p/index.m3u8", category:"Government"},
+    {name:"Dáil Éireann", url:"https://livecdn.cdnng.com/hls/orie_dail_480p/index.m3u8", category:"Government"},
+    {name:"Seanad Éireann", url:"https://livecdn.cdnng.com/hls/orie_seanad_480p/index.m3u8", category:"Government"},
+    {name:"TG4", url:"https://tg4-lh.akamaihd.net/i/tg4-tg4_1@344412/master.m3u8", category:"Entertainment"},
+    {name:"Oireachtas Audio", url:"https://streams.oireachtas.ie/audio/live.m3u8", category:"Government"}
+  ]
+};
+
+// Coordinates for markers by country code
+const countryCoords = {
+  "US": [37.0902, -95.7129],
+  "UK": [55.3781, -3.4360],
+  "CA": [56.1304, -106.3468],
+  "AU": [-25.2744, 133.7751],
+  "NZ": [-40.9006, 174.8860],
+  "IE": [53.4129, -8.2439]
+};
+
+// Initialise the map
+const map = L.map('map').setView([20, 0], 2);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 6,
+  attribution: '&copy; OpenStreetMap contributors'
+}).addTo(map);
+
+// Add markers for each country
+for (const [code, coords] of Object.entries(countryCoords)) {
+  const marker = L.marker(coords).addTo(map);
+  marker.bindPopup(code);
+  marker.on('click', () => showChannels(code));
+}
+
+// Display channel list for a selected country
+function showChannels(countryCode) {
+  const listEl = document.getElementById('channel-list');
+  const selectEl = document.getElementById('category-select');
+  const container = document.getElementById('channels-container');
+  const videoPanel = document.getElementById('video-panel');
+  const streamNote = document.getElementById('stream-note');
+  container.style.display = 'block';
+  videoPanel.innerHTML = '';
+  streamNote.textContent = '';
+  document.getElementById('country-title').textContent = `Channels in ${countryCode}`;
+
+  // Populate category filter
+  selectEl.innerHTML = '<option value="all">All</option>';
+  const categories = [...new Set(channelData[countryCode].map(ch => ch.category))];
+  categories.forEach(cat => {
+    const opt = document.createElement('option');
+    opt.value = cat;
+    opt.textContent = cat;
+    selectEl.appendChild(opt);
+  });
+
+  // Render list for selected filter
+  renderList(countryCode, 'all');
+
+  // When filter changes, update list
+  selectEl.onchange = function() {
+    renderList(countryCode, this.value);
+  };
+
+  function renderList(code, filter) {
+    listEl.innerHTML = '';
+    channelData[code]
+      .filter(ch => filter === 'all' || ch.category === filter)
+      .forEach(ch => {
+        const li = document.createElement('li');
+        li.textContent = `${ch.name} (${ch.category})`;
+        li.onclick = () => playStream(ch);
+        listEl.appendChild(li);
+      });
+  }
+
+  function playStream(channel) {
+    videoPanel.innerHTML = '';
+    const video = document.createElement('video');
+    video.controls = true;
+    video.autoplay = true;
+    video.src = channel.url;
+    video.onerror = () => {
+      videoPanel.innerHTML = `<p>Stream unavailable – public sources vary.</p>`;
+    };
+    videoPanel.appendChild(video);
+    streamNote.textContent = 'Some streams may require VPN for access.';
+  }
+}
+</script>
+</body>
+</html>
