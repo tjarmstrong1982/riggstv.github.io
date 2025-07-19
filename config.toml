@@ -29,7 +29,7 @@ DefaultContentLanguage = "en"
 [params]
   googleFonts = true
   [params.logo]
-    main = "img/logo.png"
+   main = "logo.png"
     alt = "RiggsTV Logo"
     size = "h-14"
   [params.site]
