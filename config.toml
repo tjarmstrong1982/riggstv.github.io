@@ -1,0 +1,37 @@
+baseURL = "https://tjarmstrong1982.github.io/riggstv.github.io/"
+title = "RiggsTV"
+theme = "tella"
+languageCode = "en"
+DefaultContentLanguage = "en"
+
+[menu]
+  [[menu.main]]
+    identifier = "home"
+    name = "Home"
+    url = "/"
+    weight = 1
+  [[menu.main]]
+    identifier = "channels"
+    name = "Channels"
+    url = "/channels/"
+    weight = 2
+  [[menu.main]]
+    identifier = "about"
+    name = "About"
+    url = "/about/"
+    weight = 3
+  [[menu.main]]
+    identifier = "contact"
+    name = "Contact"
+    url = "/contact/"
+    weight = 4
+
+[params]
+  googleFonts = true
+  [params.logo]
+    main = "img/logo.png"
+    alt = "RiggsTV Logo"
+    size = "h-14"
+  [params.site]
+    name = "RiggsTV"
+    tagline = "Be everywhere at once."
